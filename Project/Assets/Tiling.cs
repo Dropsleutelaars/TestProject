@@ -1,81 +1,86 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent (typeof(SpriteRenderer))]
+[RequireComponent(typeof(SpriteRenderer))]
 
-public class Tiling : MonoBehaviour {
+public class Tiling : MonoBehaviour
+{
+    public int offsetX = 2;					// the offset so that we dont get weird errors
 
+    // these are used for checking if we need to instansiate stuff
+    public bool hasARightBuddy = false;
+    public bool hasALeftBuddy = false;
 
-	public int offsetX = 2;					// the offset so that we dont get weird errors
+    public bool reverseScale = false; 			// used if the object is not tileable
 
-	// these are used for checking if we need to instansiate stuff
-	public bool hasARightBuddy = false;
-	public bool hasALeftBuddy = false;
+    private float spriteWitdth = 0f; 			// the width of our element
+    private Camera cam;
+    private Transform myTransform;
 
-	public bool reverseScale = false; 			// used if the object is not tileable
+    void Awake()
+    {
+        cam = Camera.main;
+        myTransform = transform;
+    }
 
-	private float spriteWitdth = 0f; 			// the width of our element
-	private Camera cam;
-	private Transform myTransform;
+    // Use this for initialization
+    void Start()
+    {
+        SpriteRenderer sRenderer = GetComponent<SpriteRenderer>();
+        spriteWitdth = sRenderer.sprite.bounds.size.x;
+    }
 
-	void Awake () {
-		cam = Camera.main;
-		myTransform = transform;
-	} 
-	
-	// Use this for initialization
-	void Start () {
-		SpriteRenderer sRenderer = GetComponent<SpriteRenderer> ();
-		spriteWitdth = sRenderer.sprite.bounds.size.x;
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		// does it still need buddies? If not do nothing.
-		if (hasALeftBuddy == false || hasARightBuddy == false) {
-			// calculate the cameras extend (half their width) of what the camera can see in worlds  coordinates
-			float camHorizontalExtend = cam.orthographicSize * Screen.width/Screen.height;
+    // Update is called once per frame
+    void Update()
+    {
+        // does it still need buddies? If not do nothing.
+        if (hasALeftBuddy == false || hasARightBuddy == false)
+        {
+            // calculate the cameras extend (half their width) of what the camera can see in worlds  coordinates
+            float camHorizontalExtend = cam.orthographicSize * Screen.width / Screen.height;
 
-			// calculate the x position where the camera can see the edge of the sprite (element)
-			float edgeVisiblePositionRight = (myTransform.position.x + spriteWitdth/2) - camHorizontalExtend;
-			// the same calculation only flipping it around.
-			float edgeVisiblePositionLeft = (myTransform.position.x - spriteWitdth/2) + camHorizontalExtend;
-			//checking if we can see the edge of the element and then calling makenewbuddy if we can
-			if (cam.transform.position.x >= edgeVisiblePositionRight - offsetX && hasARightBuddy == false)
-			{
-				MakeNewBuddy (1);
-				hasARightBuddy = true;
-			}
-			else if (cam.transform.position.x <= edgeVisiblePositionLeft + offsetX && hasALeftBuddy == false)
-			{
-				MakeNewBuddy (-1);
-				hasALeftBuddy = true;
-			}
+            // calculate the x position where the camera can see the edge of the sprite (element)
+            float edgeVisiblePositionRight = (myTransform.position.x + spriteWitdth / 2) - camHorizontalExtend;
+            // the same calculation only flipping it around.
+            float edgeVisiblePositionLeft = (myTransform.position.x - spriteWitdth / 2) + camHorizontalExtend;
+            //checking if we can see the edge of the element and then calling makenewbuddy if we can
+            if (cam.transform.position.x >= edgeVisiblePositionRight - offsetX && hasARightBuddy == false)
+            {
+                MakeNewBuddy(1);
+                hasARightBuddy = true;
+            }
+            else if (cam.transform.position.x <= edgeVisiblePositionLeft + offsetX && hasALeftBuddy == false)
+            {
+                MakeNewBuddy(-1);
+                hasALeftBuddy = true;
+            }
 
-		}
-	
-	}
-		// a function that creates a buddy on the side required
+        }
 
-	void MakeNewBuddy (int rightOrLeft) {
-		// calculating the new poisition for our new buddy
-		Vector3 newPosition = new Vector3 (myTransform.position.x + spriteWitdth * rightOrLeft, myTransform.position.y, myTransform.position.z);
-		// instantiating our new buddy and storing him in a variable
-		Transform newBuddy = Instantiate (myTransform, newPosition, myTransform.rotation) as Transform; 
+    }
+    // a function that creates a buddy on the side required
 
-		if (reverseScale == true) {
-			newBuddy.localScale = new Vector3 (newBuddy.localScale.x*-1,newBuddy.localScale.y, newBuddy.localScale.z);
+    void MakeNewBuddy(int rightOrLeft)
+    {
+        // calculating the new poisition for our new buddy
+        Vector3 newPosition = new Vector3(myTransform.position.x + spriteWitdth * rightOrLeft, myTransform.position.y, myTransform.position.z);
+        // instantiating our new buddy and storing him in a variable
+        Transform newBuddy = Instantiate(myTransform, newPosition, myTransform.rotation) as Transform;
 
-		}
+        if (reverseScale == true)
+        {
+            newBuddy.localScale = new Vector3(newBuddy.localScale.x * -1, newBuddy.localScale.y, newBuddy.localScale.z);
+        }
 
-		newBuddy.parent = myTransform.parent;
-		if (rightOrLeft > 0) {
-			newBuddy.GetComponent<Tiling>().hasALeftBuddy = true;
+        newBuddy.parent = myTransform.parent;
+        if (rightOrLeft > 0)
+        {
+            newBuddy.GetComponent<Tiling>().hasALeftBuddy = true;
+        }
 
-		}
-		else {
-			newBuddy.GetComponent<Tiling>().hasARightBuddy = true;
-		}
-
+        else
+        {
+            newBuddy.GetComponent<Tiling>().hasARightBuddy = true;
+        }
+    }
 }
