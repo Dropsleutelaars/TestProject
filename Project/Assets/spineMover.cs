@@ -12,7 +12,10 @@ public class spineMover : MonoBehaviour {
     float xMovement;
 
     string currentAnimation = "";
-
+    void Awake()
+    {
+        Rigidbody2D rigidBody = GetComponent<Rigidbody2D>();
+    }
 	
 	
 	// Update is called once per frame
@@ -47,9 +50,10 @@ public class spineMover : MonoBehaviour {
     }
 
     void FixedUpdate ()
-    {
-        
+    { 
         //rigidbody2D.velocity = new Vector2(xMovement, rigidbody2D.velocity.y);
+
+       // rigidBody.velocity = new Vector2(xMovement, rigidBody.velocity.y);
     }
 }
 
