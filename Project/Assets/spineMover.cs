@@ -12,6 +12,7 @@ public class spineMover : MonoBehaviour {
     float xMovement;
 
     string currentAnimation = "";
+
     void Awake()
     {
         Rigidbody2D rigidBody = GetComponent<Rigidbody2D>();
@@ -54,6 +55,9 @@ public class spineMover : MonoBehaviour {
         //rigidbody2D.velocity = new Vector2(xMovement, rigidbody2D.velocity.y);
 
        // rigidBody.velocity = new Vector2(xMovement, rigidBody.velocity.y);
+        float h = Input.GetAxis("Horizontal");
+        //m_Character.Move(h, m_Jump);
+        //m_Jump = false;
     }
 }
 
