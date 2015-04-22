@@ -1,24 +1,56 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// This script needs an RigidBody2D component attached to the same object.
+/// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
+
+/// <summary>
+/// Player inheritances from Entity
+/// </summary>
 public class Player : Entity 
 {
     public Animator anim;
     private Rigidbody2D rigidbody;
 
+#region PlayerVars
+
+    public float dashPower = 1f;
     public float maxSpeed = 10f;
     public float jumpForce = 400f;
     public float groundedCheckRadius = 0.2f;
+    public float dashBuffer;
+
+#endregion
+
     public LayerMask groundMasks;
 
+    private int numberOfHoldingObjects;
+
+    
+
+    /// <summary>
+    /// This happens when the game 'Starts'
+    /// Im setting the rigidbody variable to the rigidbody2d component.
+    /// </summary>
     private void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
+        numberOfHoldingObjects = 0;
+
+       
     }
 
+    /// <summary>
+    /// This happens every frame in the game.
+    /// Im catching the key input
+    /// </summary>
     private void Update()
     {
+        //Debug.Log(myLocation);
+
+        bool dashKeyDown = Input.GetKeyDown(KeyCode.X);
         bool jumpKeyDown = Input.GetKeyDown("space");
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
         bool grounded = false;
@@ -39,8 +71,16 @@ public class Player : Entity
         anim.SetBool("Ground", grounded);
         anim.SetFloat("vSpeed", rigidbody.velocity.y);
         anim.SetFloat("Speed", Mathf.Abs(moveDirection));
+        anim.SetBool("isDashing", IsInDash);
 
-        rigidbody.velocity = new Vector2(moveDirection * maxSpeed, rigidbody.velocity.y);
+        numberOfHoldingObjects = NumberOfHoldingObjects;
+
+        float dashMovement = (dashBuffer * 0.1f);
+        dashBuffer -= dashMovement;
+
+        float xMovement = IsInDash ? moveDirection + dashMovement * maxSpeed : moveDirection * maxSpeed;
+
+        rigidbody.velocity = new Vector2(xMovement, rigidbody.velocity.y);
 
         // If the input is moving the player right and the player is facing left...
         if (moveDirection > 0.1f && !FacingRight)
@@ -65,5 +105,73 @@ public class Player : Entity
 
         if (grounded)
             anim.SetBool("DoubleJump", false);
+
+        if (!IsInDash && dashKeyDown)
+        {
+            // Versimpelde if-statement. 
+            // Facingright == true? --> dashpower
+            // Facingright == false? --> -dashpower
+            // Dit gbruik ik om de juiste directie op de dashen.
+
+            dashBuffer = FacingRight ? dashPower : -dashPower;
+        }
+
+        //Debug.Log(anim.GetCurrentAnimatorStateInfo(0).IsTag("Dash"));
+        //Debug.Log("Is In Dash?" + IsInDash + " - " +   dashBuffer.x);
     }
+
+    /// <summary>
+    /// This is an accessor.
+    /// </summary>
+    public bool IsInDash
+    {
+        get
+        {
+            //return !Mathf.Approximately(dashBuffer.x, 0);
+
+            if (dashBuffer > 0.1f || dashBuffer < -0.1f)
+            {
+                return true;
+            }
+            
+            else 
+            {
+                return false;
+            }   
+        }
+    }
+    
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.gameObject.CompareTag("PickUp"))
+        {
+            //Vector2 newPosition = new Vector2(myLocation.x, myLocation.y + 3);
+
+            other.gameObject.transform.parent = this.transform;
+
+            other.gameObject.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + 3.5f);
+
+            NumberOfHoldingObjects += 1;
+
+            Debug.Log(NumberOfHoldingObjects);
+        }
+    }
+
+    /// <summary>
+    /// This handles the number of holding objects. When something got picked up
+    /// it just adds +1 to the value.
+    /// </summary>
+    public int NumberOfHoldingObjects
+    {
+        get 
+        {
+            return numberOfHoldingObjects;
+        }
+        set
+        {
+            numberOfHoldingObjects = value;
+        }
+    }
+      
+
 }
