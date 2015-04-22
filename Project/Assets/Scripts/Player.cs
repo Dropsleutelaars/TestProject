@@ -151,6 +151,12 @@ public class Player : Entity
 
             other.gameObject.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + 3.5f);
 
+            BoxCollider2D pickupCollision = other.gameObject.GetComponent<BoxCollider2D>();
+
+            //Stop the Collision to prevent its adding points while you double jump?!
+            pickupCollision.enabled = false;
+             
+            //Add +1 to numberOfHoldingObjects
             NumberOfHoldingObjects += 1;
 
             Debug.Log(NumberOfHoldingObjects);
