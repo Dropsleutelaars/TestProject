@@ -154,7 +154,7 @@ public class Player : Entity
 
             if (NumberOfHoldingObjects > 0)
             {
-                margin = (NumberOfHoldingObjects + margin);
+                margin = ((NumberOfHoldingObjects * 0.6f) + margin);
             }
             
 
