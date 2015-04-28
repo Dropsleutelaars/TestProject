@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// This script needs an RigidBody2D component attached to the same object.
@@ -28,6 +29,8 @@ public class Player : Entity
 
     private int numberOfHoldingObjects;
 
+    [SerializeField]
+    private List<GameObject> holdingObjects = new List<GameObject>();
     
 
     /// <summary>
@@ -48,7 +51,7 @@ public class Player : Entity
     /// </summary>
     private void Update()
     {
-        //Debug.Log(myLocation);
+        //Debug.Log(this.transform.position.y);
 
         bool dashKeyDown = Input.GetKeyDown(KeyCode.X);
         bool jumpKeyDown = Input.GetKeyDown("space");
@@ -147,19 +150,27 @@ public class Player : Entity
         {
             //Vector2 newPosition = new Vector2(myLocation.x, myLocation.y + 3);
 
+            float margin = 3.5f; 
+
+            if (NumberOfHoldingObjects > 0)
+            {
+                margin = (NumberOfHoldingObjects + margin);
+            }
+            
+
             other.gameObject.transform.parent = this.transform;
 
-            other.gameObject.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + 3.5f);
+            other.gameObject.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + margin);
 
             BoxCollider2D pickupCollision = other.gameObject.GetComponent<BoxCollider2D>();
 
             //Stop the Collision to prevent its adding points while you double jump?!
             pickupCollision.enabled = false;
-             
-            //Add +1 to numberOfHoldingObjects
-            NumberOfHoldingObjects += 1;
 
-            Debug.Log(NumberOfHoldingObjects);
+            holdingObjects.Add((GameObject)other.gameObject);
+            numberOfHoldingObjects = holdingObjects.Count;          
+
+            
         }
     }
 
@@ -171,7 +182,8 @@ public class Player : Entity
     {
         get 
         {
-            return numberOfHoldingObjects;
+            return holdingObjects.Count;
+            
         }
         set
         {
