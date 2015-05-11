@@ -13,7 +13,7 @@ using System.Collections.Generic;
 public class Player : Entity 
 {
     public Animator anim;
-    private Rigidbody2D rigidbody;
+    private Rigidbody2D rigidBody;
 
 #region PlayerVars
 
@@ -26,12 +26,9 @@ public class Player : Entity
 #endregion
 
     public LayerMask groundMasks;
-
-    private int numberOfHoldingObjects;
-
-    [SerializeField]
-    private List<GameObject> holdingObjects = new List<GameObject>();
-    
+    public Transform inventory;
+    public Vector3 inventoryOffset;
+    public int maxInventoryItems = 3;
 
     /// <summary>
     /// This happens when the game 'Starts'
@@ -39,10 +36,7 @@ public class Player : Entity
     /// </summary>
     private void Start()
     {
-        rigidbody = GetComponent<Rigidbody2D>();
-        numberOfHoldingObjects = 0;
-
-       
+        rigidBody = GetComponent<Rigidbody2D>();
     }
 
     /// <summary>
@@ -52,7 +46,9 @@ public class Player : Entity
     private void Update()
     {
         //Debug.Log(this.transform.position.y);
+      //  Debug.Log(numberOfHoldingObjects);
 
+        bool throwKeyDown = Input.GetKeyDown(KeyCode.Z);
         bool dashKeyDown = Input.GetKeyDown(KeyCode.X);
         bool jumpKeyDown = Input.GetKeyDown("space");
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
@@ -72,18 +68,16 @@ public class Player : Entity
         #endregion
 
         anim.SetBool("Ground", grounded);
-        anim.SetFloat("vSpeed", rigidbody.velocity.y);
+        anim.SetFloat("vSpeed", rigidBody.velocity.y);
         anim.SetFloat("Speed", Mathf.Abs(moveDirection));
         anim.SetBool("isDashing", IsInDash);
-
-        numberOfHoldingObjects = NumberOfHoldingObjects;
 
         float dashMovement = (dashBuffer * 0.1f);
         dashBuffer -= dashMovement;
 
         float xMovement = IsInDash ? moveDirection + dashMovement * maxSpeed : moveDirection * maxSpeed;
 
-        rigidbody.velocity = new Vector2(xMovement, rigidbody.velocity.y);
+        rigidBody.velocity = new Vector2(xMovement, rigidBody.velocity.y);
 
         // If the input is moving the player right and the player is facing left...
         if (moveDirection > 0.1f && !FacingRight)
@@ -97,13 +91,13 @@ public class Player : Entity
             // Add a vertical force to the player.
             grounded = false;
             anim.SetBool("Ground", false);
-            rigidbody.AddForce(new Vector2(0f, jumpForce));
+            rigidBody.AddForce(new Vector2(0f, jumpForce));
         }
         else if (!grounded && jumpKeyDown &&
             (anim.GetAnimatorTransitionInfo(0).IsUserName("Jumping") || anim.GetCurrentAnimatorStateInfo(0).IsTag("Jumping")))
         {
             anim.SetBool("DoubleJump", true);
-            rigidbody.AddForce(new Vector2(0f, jumpForce));
+            rigidBody.AddForce(new Vector2(0f, jumpForce));
         }
 
         if (grounded)
@@ -119,12 +113,43 @@ public class Player : Entity
             dashBuffer = FacingRight ? dashPower : -dashPower;
         }
 
+        if (throwKeyDown)
+        {
+             throwItem();
+        }
+
         //Debug.Log(anim.GetCurrentAnimatorStateInfo(0).IsTag("Dash"));
         //Debug.Log("Is In Dash?" + IsInDash + " - " +   dashBuffer.x);
+
+//        Debug.Log(this.transform.GetChild(4));
+    }
+
+    public void throwItem()
+    {
+        if (inventory.childCount == 0)
+            return;
+
+        Transform item = inventory.GetChild(0);
+
+        item.GetComponent<Rigidbody2D>().isKinematic = false;
+        item.GetComponent<Rigidbody2D>().AddForce((FacingRight ? transform.right : -transform.right) * 1000f);
+
+        item.parent = null;
+
+        SortInventory();
+        StartCoroutine(ProjectileRoutine(item));
+    }
+
+    private IEnumerator ProjectileRoutine(Transform item)
+    {
+        yield return new WaitForSeconds(0.2f);
+        item.GetComponent<CircleCollider2D>().enabled = true;
+        item.GetComponent<CircleCollider2D>().isTrigger = false;
+
     }
 
     /// <summary>
-    /// This is an accessor.
+    /// This is an accessor
     /// </summary>
     public bool IsInDash
     {
@@ -148,32 +173,54 @@ public class Player : Entity
     {
         if (other.gameObject.CompareTag("PickUp"))
         {
-            //Vector2 newPosition = new Vector2(myLocation.x, myLocation.y + 3);
-
+            PickupItem(other.transform);
+            
+/*
             float margin = 3.5f; 
 
             if (NumberOfHoldingObjects > 0)
             {
                 margin = ((NumberOfHoldingObjects * 0.6f) + margin);
             }
-            
 
-            other.gameObject.transform.parent = this.transform;
+            Destroy(other.gameObject);
 
-            other.gameObject.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + margin);
+            GameObject pickup = Instantiate(other.gameObject, this.transform.position, this.transform.rotation) as GameObject;
 
-            BoxCollider2D pickupCollision = other.gameObject.GetComponent<BoxCollider2D>();
+            pickup.transform.parent = this.transform;
 
-            //Stop the Collision to prevent its adding points while you double jump?!
-            pickupCollision.enabled = false;
-
-            holdingObjects.Add((GameObject)other.gameObject);
-            numberOfHoldingObjects = holdingObjects.Count;          
-
-            
+            pickup.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + margin);
+            */
+            //holdingObjects.Add((GameObject)pickup);
+            //numberOfHoldingObjects = holdingObjects.Count;                      
         }
     }
 
+    private void PickupItem(Transform item)
+    {
+        if (item.childCount >= maxInventoryItems)
+            return;
+
+        item.parent = inventory;
+        //Stop the Collision to prevent its adding points while you double jump?!
+        item.GetComponent<CircleCollider2D>().enabled = false;
+
+        SortInventory();
+    }
+
+    private void SortInventory()
+    {
+        for(int i = 0; i < inventory.childCount; i++)
+        {
+            Transform item  = inventory.GetChild(i);
+
+            item.GetComponent<Rigidbody2D>().isKinematic = true;
+            item.localPosition = inventoryOffset * i;
+        }
+    }
+
+    
+/*
     /// <summary>
     /// This handles the number of holding objects. When something got picked up
     /// it just adds +1 to the value.
@@ -190,6 +237,7 @@ public class Player : Entity
             numberOfHoldingObjects = value;
         }
     }
+*/
       
 
 }
