@@ -241,11 +241,17 @@ public class Player : Entity
         GetComponent<Rigidbody2D>().AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
         isWallSliding = false;
     }
-    private void OnDrawGizmos()
+
+    /*
+    void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
+        // Draw a yellow sphere at the transform's position
+        Gizmos.color = Color.red;
+        
         Gizmos.DrawSphere(groundCheck.transform.position, groundedCheckRadius);
     }
+     * /
+    
 // This is the end of the walljump
     
 /*
