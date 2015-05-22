@@ -58,7 +58,8 @@ public class Player : Entity
 
         bool throwKeyDown = Input.GetKeyDown(KeyCode.Z);
         bool dashKeyDown = Input.GetKeyDown(KeyCode.X);
-        bool jumpKeyDown = Input.GetKeyDown("space");
+        bool jumpKeyDown = Input.GetButtonDown("Jump");
+   
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
         bool grounded = false;
 
