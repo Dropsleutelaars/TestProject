@@ -88,6 +88,8 @@ public class Player : Entity
                     isJumping = true;
                 }
             }
+
+            
             //Debug.DrawRay(groundCheck.transform.position, new Vector2(0, -0.1f), Color.red);
             //Debug.Log(isGrounded);
      
@@ -128,7 +130,7 @@ public class Player : Entity
             )
         {
             isDoubleJumping = true;
-            rigidBody.AddForce(new Vector2(0f, jumpForce));
+            rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
         }
 
         if (isGrounded)
@@ -170,7 +172,8 @@ public class Player : Entity
         // Add a vertical force to the player.
         isGrounded = false;
         isJumping = true;
-        rigidBody.AddForce(new Vector2(0f, jumpForce));
+        rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+//        rigidBody.AddForce(new Vector2(0f, jumpForce));
     }
     public void throwItem()
     {
@@ -271,7 +274,8 @@ public class Player : Entity
 // This is currently using Davids' code.
     private void wallJump()
     {
-        GetComponent<Rigidbody2D>().AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+
+        rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
         isWallSliding = false;
     }
 
