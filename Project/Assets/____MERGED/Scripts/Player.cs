@@ -28,6 +28,9 @@ public class Player : Entity
     public float JumpSpeed = 10.0f;
     public int maxInventoryItems = 3;
     private bool isWallSliding;
+    private bool isJumping;
+    private bool isDoubleJumping;
+    private bool isGrounded;
 
 #endregion
 
@@ -61,7 +64,7 @@ public class Player : Entity
         bool jumpKeyDown = Input.GetButtonDown("Jump");
    
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
-        bool grounded = false;
+        isGrounded = false;
 
       
 
@@ -69,24 +72,37 @@ public class Player : Entity
         /******** Grounded check */
         // The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
         // This can be done using layers instead but Sample Assets will not overwrite your project settings.
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.transform.position, groundedCheckRadius, groundMasks);
-        for (int i = 0; i < colliders.Length; i++)
-        {
-            if (colliders[i].gameObject != gameObject)
-                grounded = true;
-        }
+        //Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.transform.position, groundedCheckRadius, groundMasks);
 
-        Debug.Log(grounded);
+        RaycastHit2D groundHit = Physics2D.Raycast(groundCheck.transform.position, new Vector2(0, -0.1f));
+       
+            if (groundHit.collider != null)
+            {
+                if (groundHit.distance <= 0.1f)
+                {
+                    isGrounded = true;
+
+                }
+                else
+                {
+                    isJumping = true;
+                }
+            }
+            //Debug.DrawRay(groundCheck.transform.position, new Vector2(0, -0.1f), Color.red);
+            //Debug.Log(isGrounded);
+     
        // Gizmos.DrawSphere()
         /********** end grounded check  */
         #endregion
 
         #region Animator variables
-        anim.SetBool("Ground", grounded);
-        anim.SetBool("IsGrounded", grounded);
+        anim.SetBool("Ground", isGrounded);
+        anim.SetBool("IsGrounded", isGrounded);
         anim.SetFloat("vSpeed", rigidBody.velocity.y);
         anim.SetFloat("Speed", Mathf.Abs(moveDirection));
         anim.SetBool("isDashing", IsInDash);
+        anim.SetBool("isJumping", isJumping);
+        anim.SetBool("isDoubleJumping", isDoubleJumping);
         #endregion
 
         float dashMovement = (dashBuffer * 0.1f);
@@ -103,22 +119,30 @@ public class Player : Entity
         else if (moveDirection < -.1f && FacingRight)
             Flip();
 
-        if (grounded && jumpKeyDown && anim.GetBool("Ground"))
+        if (isGrounded && jumpKeyDown)
         {
-            // Add a vertical force to the player.
-            grounded = false;
-            anim.SetBool("Ground", false);
-            rigidBody.AddForce(new Vector2(0f, jumpForce));
+            jump();
         }
-        else if (!grounded && jumpKeyDown &&
-            (anim.GetAnimatorTransitionInfo(0).IsUserName("Jumping") || anim.GetCurrentAnimatorStateInfo(0).IsTag("Jumping")))
+        else if (!isGrounded && jumpKeyDown && !isDoubleJumping 
+           // && (anim.GetAnimatorTransitionInfo(0).IsUserName("Jumping") || anim.GetCurrentAnimatorStateInfo(0).IsTag("Jumping"))
+            )
         {
-            anim.SetBool("DoubleJump", true);
+            isDoubleJumping = true;
             rigidBody.AddForce(new Vector2(0f, jumpForce));
         }
 
-        if (grounded)
-            anim.SetBool("DoubleJump", false);
+        if (isGrounded)
+        {
+            isJumping = false;
+            isDoubleJumping = false;
+        }
+
+        /*
+        if (rigidBody.velocity.y > 0)
+        {
+            isJumping = true;
+        }
+         */
 
         if (!IsInDash && dashKeyDown)
         {
@@ -135,12 +159,19 @@ public class Player : Entity
              throwItem();
         }
 
+        //Debug.Log(isJumping);
         //Debug.Log(anim.GetCurrentAnimatorStateInfo(0).IsTag("Dash"));
         //Debug.Log("Is In Dash?" + IsInDash + " - " +   dashBuffer.x);
 
 //        Debug.Log(this.transform.GetChild(4));
     }
-
+    public void jump()
+    {
+        // Add a vertical force to the player.
+        isGrounded = false;
+        isJumping = true;
+        rigidBody.AddForce(new Vector2(0f, jumpForce));
+    }
     public void throwItem()
     {
         if (inventory.childCount == 0)
@@ -191,8 +222,8 @@ public class Player : Entity
         if (other.gameObject.CompareTag("PickUp"))
         {
             PickupItem(other.transform);
-            
-/*
+            #region old inventory system
+            /*
             float margin = 3.5f; 
 
             if (NumberOfHoldingObjects > 0)
@@ -209,7 +240,8 @@ public class Player : Entity
             pickup.transform.position = new Vector2(this.transform.position.x, this.transform.position.y + margin);
             */
             //holdingObjects.Add((GameObject)pickup);
-            //numberOfHoldingObjects = holdingObjects.Count;                      
+            //numberOfHoldingObjects = holdingObjects.Count;        
+            #endregion
         }
     }
 
@@ -251,7 +283,7 @@ public class Player : Entity
         
         Gizmos.DrawSphere(groundCheck.transform.position, groundedCheckRadius);
     }
-     * /
+    */
     
 // This is the end of the walljump
     
@@ -273,6 +305,6 @@ public class Player : Entity
         }
     }
 */
-      
+ 
 
 }
