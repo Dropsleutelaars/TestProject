@@ -50,18 +50,50 @@ public class Player : Entity
         wallCheck = transform.FindChild("WallCheck");
     }
 
+    private void FixedUpdate()
+    {
+
+        if (this.transform.position.y < -10f)
+            Application.LoadLevel(0);
+
+
+        bool jumpKeyDown = Input.GetButtonDown("Jump");
+        if (isGrounded && jumpKeyDown)
+        {
+            jump();
+            
+        }
+        else if (!isGrounded && jumpKeyDown && !isDoubleJumping
+            // && (anim.GetAnimatorTransitionInfo(0).IsUserName("Jumping") || anim.GetCurrentAnimatorStateInfo(0).IsTag("Jumping"))
+            )
+        {
+            rigidBody.velocity = new Vector2(0, 0); //Vector2.zero
+            isDoubleJumping = true;
+
+            int doubleJumpAnimation = Random.Range(0, 2);
+            Debug.Log(doubleJumpAnimation);
+
+            anim.SetInteger("doubleJAnimation", doubleJumpAnimation);
+            jump();
+            //rigidBody.AddForce(Vector2.up * -1  JumpSpeed, ForceMode2D.Impulse);
+            //rigidBody.AddForce(new Vector2(0f, JumpSpeed), ForceMode2D.Impulse);
+            //rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse); 
+
+
+            rigidBody.AddRelativeForce(Vector2.up * JumpSpeed, ForceMode2D.Force);
+        }
+    }
+
+
     /// <summary>
     /// This happens every frame in the game.
     /// Im catching the key input
     /// </summary>
     private void Update()
     {
-        //Debug.Log(this.transform.position.y);
-      //  Debug.Log(numberOfHoldingObjects);
-
         bool throwKeyDown = Input.GetKeyDown(KeyCode.Z);
         bool dashKeyDown = Input.GetKeyDown(KeyCode.X);
-        bool jumpKeyDown = Input.GetButtonDown("Jump");
+        
    
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
         isGrounded = false;
@@ -81,7 +113,7 @@ public class Player : Entity
                 if (groundHit.distance <= 0.1f)
                 {
                     isGrounded = true;
-
+                    
                 }
                 else
                 {
@@ -89,8 +121,8 @@ public class Player : Entity
                 }
             }
 
-            
-            //Debug.DrawRay(groundCheck.transform.position, new Vector2(0, -0.1f), Color.red);
+        
+        Debug.DrawRay(groundCheck.transform.position, new Vector2(0, -0.1f), Color.red);
             //Debug.Log(isGrounded);
      
        // Gizmos.DrawSphere()
@@ -98,13 +130,13 @@ public class Player : Entity
         #endregion
 
         #region Animator variables
-        anim.SetBool("Ground", isGrounded);
         anim.SetBool("IsGrounded", isGrounded);
         anim.SetFloat("vSpeed", rigidBody.velocity.y);
         anim.SetFloat("Speed", Mathf.Abs(moveDirection));
         anim.SetBool("isDashing", IsInDash);
         anim.SetBool("isJumping", isJumping);
         anim.SetBool("isDoubleJumping", isDoubleJumping);
+        
         #endregion
 
         float dashMovement = (dashBuffer * 0.1f);
@@ -121,30 +153,13 @@ public class Player : Entity
         else if (moveDirection < -.1f && FacingRight)
             Flip();
 
-        if (isGrounded && jumpKeyDown)
-        {
-            jump();
-        }
-        else if (!isGrounded && jumpKeyDown && !isDoubleJumping 
-           // && (anim.GetAnimatorTransitionInfo(0).IsUserName("Jumping") || anim.GetCurrentAnimatorStateInfo(0).IsTag("Jumping"))
-            )
-        {
-            isDoubleJumping = true;
-            rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
-        }
+       
 
         if (isGrounded)
         {
             isJumping = false;
             isDoubleJumping = false;
         }
-
-        /*
-        if (rigidBody.velocity.y > 0)
-        {
-            isJumping = true;
-        }
-         */
 
         if (!IsInDash && dashKeyDown)
         {
@@ -172,8 +187,13 @@ public class Player : Entity
         // Add a vertical force to the player.
         isGrounded = false;
         isJumping = true;
-        rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
-//        rigidBody.AddForce(new Vector2(0f, jumpForce));
+
+        rigidBody.AddForce(new Vector2(0f, JumpSpeed), ForceMode2D.Impulse);
+
+        /*
+            rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+            rigidBody.AddForce(new Vector2(0f, jumpForce));
+         */
     }
     public void throwItem()
     {
@@ -183,7 +203,9 @@ public class Player : Entity
         Transform item = inventory.GetChild(0);
 
         item.GetComponent<Rigidbody2D>().isKinematic = false;
-        item.GetComponent<Rigidbody2D>().AddForce((FacingRight ? transform.right : -transform.right) * 1000f);
+        item.GetComponent<CircleCollider2D>().isTrigger = true;
+        item.GetComponent<Rigidbody2D>().gravityScale = 0;
+        item.GetComponent<Rigidbody2D>().AddForce((FacingRight ? transform.right : -transform.right) * 450f);
 
         item.parent = null;
 
@@ -193,9 +215,9 @@ public class Player : Entity
 
     private IEnumerator ProjectileRoutine(Transform item)
     {
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.25f);
         item.GetComponent<CircleCollider2D>().enabled = true;
-        item.GetComponent<CircleCollider2D>().isTrigger = false;
+        
 
     }
 
@@ -274,11 +296,12 @@ public class Player : Entity
 // This is currently using Davids' code.
     private void wallJump()
     {
-
-        rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
+        rigidBody.AddForce(new Vector2(0f, JumpSpeed));
+        //rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
         isWallSliding = false;
     }
 
+    #region Commented (old)
     /*
     void OnDrawGizmosSelected()
     {
@@ -290,25 +313,32 @@ public class Player : Entity
     */
     
 // This is the end of the walljump
-    
-/*
-    /// <summary>
-    /// This handles the number of holding objects. When something got picked up
-    /// it just adds +1 to the value.
-    /// </summary>
-    public int NumberOfHoldingObjects
-    {
-        get 
+
+    /*
+        /// <summary>
+        /// This handles the number of holding objects. When something got picked up
+        /// it just adds +1 to the value.
+        /// </summary>
+        public int NumberOfHoldingObjects
         {
-            return holdingObjects.Count;
+            get 
+            {
+                return holdingObjects.Count;
             
+            }
+            set
+            {
+                numberOfHoldingObjects = value;
+            }
         }
-        set
-        {
-            numberOfHoldingObjects = value;
-        }
+    */
+    #endregion
+
+    public static float CalculateJumpVerticalSpeed(float targetJumpHeight)
+    {
+        // From the jump height and gravity we deduce the upwards speed 
+        // for the character to reach at the apex.
+        return Mathf.Sqrt(2f * targetJumpHeight * Physics2D.gravity.y);
     }
-*/
- 
 
 }
