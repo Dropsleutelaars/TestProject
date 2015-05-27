@@ -12,6 +12,7 @@ using System.Collections.Generic;
 /// </summary>
 public class Player : Entity 
 {
+    // References to some components or transforms of gameobjects.
     public Animator anim;
     private Rigidbody2D rigidBody;
     private Transform groundCheck;
@@ -20,17 +21,22 @@ public class Player : Entity
 
 #region PlayerVars
 
-    public float dashPower = 1f;
-    public float maxSpeed = 10f;
-    public float jumpForce = 400f;
-    public float groundedCheckRadius = 0.2f;
-    public float dashBuffer;
-    public float JumpSpeed = 10.0f;
-    public int maxInventoryItems = 3;
-    private bool isWallSliding;
-    private bool isJumping;
-    private bool isDoubleJumping;
-    private bool isGrounded;
+    public float dashPower = 1f;                // the strength of the Dash (not sure if its still in the game)
+    public float maxSpeed = 10f;                // the maximum movement speed of the character.
+    public float jumpForce = 400f;          
+    //public float groundedCheckRadius = 0.2f;      Not used anymore, since we use a ray downwards the ground.
+    public float dashBuffer;                    // This will indicate whether the player can dash or not.
+    public float JumpSpeed = 10.0f;             // This is the strength of the jump of the player.
+    public int maxInventoryItems = 3;           // This is used to store the number of maximum items that can be hold.
+    private bool isWallSliding;                 // Just a boolean which represents if we are sliding against a wallslide
+    private bool isJumping;                     // Just a boolean to check if we are NOT grounded. 
+                                                // --- Could delete this too, and use !isGrounded
+    private bool isDoubleJumping;               // Did the player used his double jump already?
+    private bool isGrounded;                    // A boolean which checks if the player is grounded
+
+
+    public bool isStunned = false;//are we stunned
+   
 
 #endregion
 
@@ -101,10 +107,10 @@ public class Player : Entity
       
 
         #region Grounded check
+
         /******** Grounded check */
-        // The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
-        // This can be done using layers instead but Sample Assets will not overwrite your project settings.
-        //Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.transform.position, groundedCheckRadius, groundMasks);
+        // The player had a circlecast before, but i decided to just draw a ray downwards from the center of the feet.
+        // Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.transform.position, groundedCheckRadius, groundMasks);
 
         RaycastHit2D groundHit = Physics2D.Raycast(groundCheck.transform.position, new Vector2(0, -0.1f));
        
@@ -123,7 +129,7 @@ public class Player : Entity
 
         
         Debug.DrawRay(groundCheck.transform.position, new Vector2(0, -0.1f), Color.red);
-            //Debug.Log(isGrounded);
+        //Debug.Log(isGrounded);
      
        // Gizmos.DrawSphere()
         /********** end grounded check  */
@@ -334,11 +340,19 @@ public class Player : Entity
     */
     #endregion
 
-    public static float CalculateJumpVerticalSpeed(float targetJumpHeight)
+    public void stunEnemy() //Stun an enemy with a specific time.
     {
-        // From the jump height and gravity we deduce the upwards speed 
-        // for the character to reach at the apex.
-        return Mathf.Sqrt(2f * targetJumpHeight * Physics2D.gravity.y);
+        if (anim != null)
+        {
+            anim.speed = 0;
+        }
+
+        isStunned = true;
+
     }
+
+   
+
+
 
 }
