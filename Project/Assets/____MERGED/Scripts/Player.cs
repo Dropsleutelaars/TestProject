@@ -43,6 +43,10 @@ public class Player : Entity
     public LayerMask groundMasks;
     public Transform inventory;
     public Vector3 inventoryOffset;
+
+
+    public GameObject partSysGO;
+    public ParticleSystem partSys;
     
 
     /// <summary>
@@ -54,6 +58,8 @@ public class Player : Entity
         rigidBody = GetComponent<Rigidbody2D>();
         groundCheck = transform.FindChild("GroundCheck");
         wallCheck = transform.FindChild("WallCheck");
+
+        partSys = GetComponent<ParticleSystem>();
     }
 
     private void FixedUpdate()
@@ -77,7 +83,7 @@ public class Player : Entity
             isDoubleJumping = true;
 
             int doubleJumpAnimation = Random.Range(0, 2);
-            Debug.Log(doubleJumpAnimation);
+            
 
             anim.SetInteger("doubleJAnimation", doubleJumpAnimation);
             jump();
@@ -103,9 +109,8 @@ public class Player : Entity
    
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
         isGrounded = false;
-
-      
-
+        
+        
         #region Grounded check
 
         /******** Grounded check */
@@ -152,6 +157,7 @@ public class Player : Entity
 
         rigidBody.velocity = new Vector2(xMovement, rigidBody.velocity.y);
 
+       
         // If the input is moving the player right and the player is facing left...
         if (moveDirection > 0.1f && !FacingRight)
             Flip();
@@ -159,7 +165,14 @@ public class Player : Entity
         else if (moveDirection < -.1f && FacingRight)
             Flip();
 
-       
+       if (rigidBody.velocity.x == 0)
+       {
+           partSys.Stop();
+       }
+       else
+       {
+           partSys.Play();
+       }
 
         if (isGrounded)
         {
