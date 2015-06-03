@@ -35,11 +35,11 @@ public class Player : Entity
     private bool isGrounded;                    // A boolean which checks if the player is grounded
 
 
-    public bool isStunned = false;//are we stunned
+   
    
 
 #endregion
-
+    public LayerMask WallLayers;
     public LayerMask groundMasks;
     public Transform inventory;
     public Vector3 inventoryOffset;
@@ -64,6 +64,8 @@ public class Player : Entity
 
     private void FixedUpdate()
     {
+        isWallSliding = Physics2D.OverlapPoint(wallCheck.position, WallLayers);
+
 
         if (this.transform.position.y < -10f)
             Application.LoadLevel(0);
@@ -84,7 +86,6 @@ public class Player : Entity
 
             int doubleJumpAnimation = Random.Range(0, 2);
             
-
             anim.SetInteger("doubleJAnimation", doubleJumpAnimation);
             jump();
             //rigidBody.AddForce(Vector2.up * -1  JumpSpeed, ForceMode2D.Impulse);
@@ -93,6 +94,26 @@ public class Player : Entity
 
 
             rigidBody.AddRelativeForce(Vector2.up * JumpSpeed, ForceMode2D.Force);
+        }
+
+        if (isWallSliding)
+        {
+            Debug.Log("Is wall sliding");
+            rigidBody.velocity = new Vector2(0f, -1.25f);
+
+            if (
+                (Input.GetAxis("Horizontal") > 0) && (this.transform.localScale == new Vector3(-1.0f, 1.0f, 1.0f))
+                ||
+                (Input.GetAxis("Horizontal") < 0) && (this.transform.localScale == new Vector3(1.0f, 1.0f, 1.0f))
+                )
+            {
+                wallJump();
+            }
+
+            if (Input.GetAxis("Vertical") < 0)
+            {
+                GetComponent<Rigidbody2D>().velocity = new Vector2(0f, -7f);
+            }
         }
     }
 
@@ -109,7 +130,7 @@ public class Player : Entity
    
         float moveDirection = Input.GetAxis("Horizontal"); // -1 to 1
         isGrounded = false;
-        
+        Debug.Log(isJumping);
         
         #region Grounded check
 
@@ -124,11 +145,12 @@ public class Player : Entity
                 if (groundHit.distance <= 0.1f)
                 {
                     isGrounded = true;
-                    
+                    isJumping = false;
+                    isDoubleJumping = false;
                 }
                 else
                 {
-                    isJumping = true;
+                    //isJumping = true;
                 }
             }
 
@@ -167,18 +189,14 @@ public class Player : Entity
 
        if (rigidBody.velocity.x == 0)
        {
-           partSys.Stop();
+           //partSys.Stop();
        }
        else
        {
-           partSys.Play();
+           //partSys.Play();
        }
 
-        if (isGrounded)
-        {
-            isJumping = false;
-            isDoubleJumping = false;
-        }
+        
 
         if (!IsInDash && dashKeyDown)
         {
@@ -214,6 +232,15 @@ public class Player : Entity
             rigidBody.AddForce(new Vector2(0f, jumpForce));
          */
     }
+
+    void wallJump()
+    {
+        rigidBody.AddForce(Vector2.up * JumpSpeed * 1.25f, ForceMode2D.Impulse);
+        isWallSliding = false;
+        isGrounded = false;
+        isJumping = true;
+    }
+
     public void throwItem()
     {
         if (inventory.childCount == 0)
@@ -313,12 +340,7 @@ public class Player : Entity
     }
 
 // This is currently using Davids' code.
-    private void wallJump()
-    {
-        rigidBody.AddForce(new Vector2(0f, JumpSpeed));
-        //rigidBody.AddForce(Vector2.up * JumpSpeed, ForceMode2D.Impulse);
-        isWallSliding = false;
-    }
+    
 
     #region Commented (old)
     /*
@@ -353,16 +375,7 @@ public class Player : Entity
     */
     #endregion
 
-    public void stunEnemy() //Stun an enemy with a specific time.
-    {
-        if (anim != null)
-        {
-            anim.speed = 0;
-        }
-
-        isStunned = true;
-
-    }
+  
 
    
 
