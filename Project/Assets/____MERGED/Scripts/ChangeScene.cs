@@ -4,7 +4,7 @@ using System.Collections;
 public class ChangeScene : MonoBehaviour {	
 	
 	// Update is called once per frame
-	public void ChangeToScene (string sceneToChangeTo) 
+	public void ChangeToScene (int sceneToChangeTo) 
     {
         Application.LoadLevel(sceneToChangeTo);
 
