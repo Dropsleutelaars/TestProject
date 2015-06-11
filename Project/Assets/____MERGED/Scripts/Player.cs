@@ -2,6 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//Deltatime wel toevoegen.
+
+//Update is in frames
+//Fixedupdate is in de tijd tussen de frames.
+
+
 /// <summary>
 /// This script needs an RigidBody2D component attached to the same object.
 /// </summary>
@@ -60,6 +66,7 @@ public class Player : Entity
         wallCheck = transform.FindChild("WallCheck");
 
         partSys = GetComponent<ParticleSystem>();
+               
     }
 
     private void FixedUpdate()
@@ -112,7 +119,7 @@ public class Player : Entity
 
             if (Input.GetAxis("Vertical") < 0)
             {
-                GetComponent<Rigidbody2D>().velocity = new Vector2(0f, -7f);
+                rigidBody.velocity = new Vector2(0f, -7f);
             }
         }
     }
@@ -247,11 +254,12 @@ public class Player : Entity
             return;
 
         Transform item = inventory.GetChild(0);
+        CircleCollider2D itemCollider = item.GetComponent<CircleCollider2D>();
 
-        item.GetComponent<Rigidbody2D>().isKinematic = false;
-        item.GetComponent<CircleCollider2D>().isTrigger = true;
-        item.GetComponent<Rigidbody2D>().gravityScale = 0;
-        item.GetComponent<Rigidbody2D>().AddForce((FacingRight ? transform.right : -transform.right) * 450f);
+        rigidBody.isKinematic = false;
+        itemCollider.isTrigger = true;
+        rigidBody.gravityScale = 0;
+        rigidBody.AddForce((FacingRight ? transform.right : -transform.right) * 450f);
 
         item.parent = null;
 
@@ -261,8 +269,10 @@ public class Player : Entity
 
     private IEnumerator ProjectileRoutine(Transform item)
     {
+       CircleCollider2D itemCollider = item.GetComponent<CircleCollider2D>();
+        
         yield return new WaitForSeconds(0.25f);
-        item.GetComponent<CircleCollider2D>().enabled = true;
+        itemCollider.enabled = true;
         
 
     }
@@ -318,12 +328,13 @@ public class Player : Entity
 
     private void PickupItem(Transform item)
     {
+        CircleCollider2D itemCollider = item.GetComponent<CircleCollider2D>();
         if (item.childCount >= maxInventoryItems)
             return;
 
         item.parent = inventory;
         //Stop the Collision to prevent its adding points while you double jump?!
-        item.GetComponent<CircleCollider2D>().enabled = false;
+        itemCollider.enabled = false;
 
         SortInventory();
     }
@@ -334,7 +345,7 @@ public class Player : Entity
         {
             Transform item  = inventory.GetChild(i);
 
-            item.GetComponent<Rigidbody2D>().isKinematic = true;
+            rigidBody.isKinematic = true;
             item.localPosition = inventoryOffset * i;
         }
     }
